@@ -1,0 +1,95 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "matomo.fullname" . }}
+  labels:
+    app: {{ template "matomo.name" . }}
+    chart: {{ template "matomo.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "matomo.fullname" . }}
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+            "name": "{{ template "matomo.fullname" . }}-config",
+            "image": "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}",
+            "imagePullPolicy": {{ .Values.image.pullPolicy | quote }},
+            "command": ["bash", "-c", "
+              export DB_USERNAME = $(cat secret.txt | grep username)
+              export DB_PASSWORD = $(cat secret.txt | grep password)
+              sed -i -- "s/username = DB_USERNAME/$DB_USERNAME/g" /etc/config/config.ini.php 
+              sed -i -- "s/password = DB_PASSWORD/$DB_PASSWORD/g" /etc/config/config.ini.php 
+              cp /etc/config/config.ini.php /var/www/html/config/; cp /etc/config/php.ini /usr/local/etc/php/php.ini; kill -USR2 1
+            "],
+            "volumeMounts": [
+              {
+                "name": "matomo-conf",
+                "mountPath": "/etc/config/"
+              },
+              {
+                "name": "matomo-secret",
+                "mountPath": "/etc/secret/"
+              }
+            ]
+          }
+        ]'
+    spec:
+      containers:
+      - name: {{ template "matomo.fullname" . }}
+        image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        env:
+        - name: TZ
+          value: {{ .Values.matomoTZ | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.matomoLOG_LEVEL | quote }}
+        - name: MEMORY_LIMIT
+          value: {{ .Values.matomoMEMORY_LIMIT | quote }}
+        - name: UPLOAD_MAX_SIZE
+          value: {{ .Values.matomoUPLOAD_MAX_SIZE | quote }}
+        - name: OPCACHE_MEM_SIZE
+          value: {{ .Values.matomoOPCACHE_MEM_SIZE | quote }}
+        - name: SSMTP_HOST
+          value: {{ .Values.matomoSSMTP_HOST | quote }}
+        - name: SSMTP_PORT
+          value: {{ .Values.matomoSSMTP_PORT | quote }}
+        - name: SSMTP_HOSTNAME
+          value: {{ .Values.matomoSSMTP_HOSTNAME | quote }}
+        - name: SSMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "fullname" . }}
+              key: ssmtp-password
+        - name: SSMTP_USER
+          value: {{ .Values.matomoSSMTP_USER | quote }}
+        - name: SSMTP_TLS
+          value: {{ .Values.matomoSSMTP_TLS | quote }}
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        volumeMounts:
+        - name: html-dir
+          mountPath: /var/www/html
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+      volumes:
+      - name: matomo-conf
+        configMap: 
+          name: matomo
+      - name: matomo-secret
+          secret:
+            secretName: matomo
+      - name: html-dir
+      {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "matomo.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{ end }}
