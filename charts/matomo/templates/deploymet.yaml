@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "matomo.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "matomo.name" . }}
+    helm.sh/chart: {{ include "matomo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "matomo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "matomo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: my-pvc-nfs
+        persistentVolumeClaim:
+          claimName: {{ include "matomo.fullname" . }}-nfs
+      {{- if .Values.dbServiceAccount }}
+      serviceAccountName: {{ .Values.dbServiceAccount }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}-app
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+          - name: {{ include "matomo.fullname" . }}-nfs
+            mountPath: /var/www/html
+        readinessProbe:
+          httpGet:
+              path: /
+              port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+        env:
+        - name: MATOMO_ENABLE_PROXY_URI_HEADER
+          value: !!string {{ .Values.matomo.proxyUri }}
+        - name: MATOMO_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: matomo-db
+              key: db_user
+        - name: MARIADB_PORT_NUMBER
+          value: !!string {{ .Values.db.port }}
+        - name: MARIADB_HOST
+          value: !!string {{ .Values.db.host }}
+        - name: MATOMO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: matomo-db
+              key: db_password
+        - name: MATOMO_DATABASE_DBNAME
+          valueFrom:
+            secretKeyRef:
+              name: matomo-db
+              key: db_name
+        - name: MATOMO_DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: matomo-db
+              key: matomo_user
+        - name: MATOMO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: matomo-db
+              key: matomo_password
+        volumeMounts:
+          # name must match the volume name below
+          - name: my-pvc-nfs
+            mountPath: "/var/www/html"
+      - name: cloud-sql-proxy
+        # It is recommended to use the latest version of the Cloud SQL proxy
+        # Make sure to update on a regular schedule!
+        image: gcr.io/cloudsql-docker/gce-proxy:1.17
+        command:
+          - "/cloud_sql_proxy"
+
+          # If connecting from a VPC-native GKE cluster, you can use the
+          # following flag to have the proxy connect over private IP
+          # - "-ip_address_types=PRIVATE"
+
+          # Replace DB_PORT with the port the proxy should listen on
+          # Defaults: MySQL: 3306, Postgres: 5432, SQLServer: 1433
+          - !!string {{ .Values.dbProxy.instances}}
+        securityContext:
+          # The default Cloud SQL proxy image is based on distroless, which
+          # runs as the "nonroot" user (uid: 65534) by default.
+          runAsNonRoot: true
+          runAsUser: 65532
+          runAsGroup: 65532
