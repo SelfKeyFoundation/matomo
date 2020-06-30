@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image: 
+  repository: matomo
+  tag: '3.13.6'
+  imagePullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+
+resources: {}
+
+matomo: 
+  proxyUri: 'yes'
+
+db:
+  port: '3306'
+  host: '127.0.0.1'
+
+dbProxy:
+  instances: "-instances=selfkey2:asia-east2:matomo=tcp:3306"
+
+gcePersistentDisk:
+  pdName: matomo-nfs-disk
+  fsType: ext4
+  size: 20Gi
+
+dbServiceAccount: matomo-sql

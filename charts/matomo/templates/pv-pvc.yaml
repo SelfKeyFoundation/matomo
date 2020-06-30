@@ -1,0 +1,26 @@
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "matomo.fullname" . }}-nfs
+spec:
+  capacity:
+    storage: {{ .Values.gcePersistentDisk.size }}
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: {{ include "matomo.fullname" . }}-nfs.{{ .Release.Namespace }}.svc.cluster.local
+    path: "/"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "matomo.fullname" . }}-nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: {{ .Values.gcePersistentDisk.size }}

@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ include "matomo.fullname" . }}-nfs
+  labels:
+    app.kubernetes.io/name: {{ include "matomo.name" . }}-nfs
+    helm.sh/chart: {{ include "matomo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "matomo.name" . }}-nfs
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "matomo.name" . }}-nfs
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: nfs-server
+        image: gcr.io/google_containers/volume-nfs:0.8
+        ports:
+          - name: nfs
+            containerPort: 2049
+          - name: mountd
+            containerPort: 20048
+          - name: rpcbind
+            containerPort: 111
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /exports
+            name: {{ include "matomo.fullname" . }}-mypvc
+      volumes:
+        - name: {{ include "matomo.fullname" . }}-mypvc
+          gcePersistentDisk:
+            pdName: {{ .Values.gcePersistentDisk.pdName }}
+            fsType: {{ .Values.gcePersistentDisk.ext4 }}
