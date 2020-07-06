@@ -9,8 +9,13 @@ metadata:
     helm.sh/chart: {{ include "matomo.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    {{- if .Values.ingressDomain }}
+      ingressDomain: {{ .Values.ingressDomain }}
+    {{- end }}
 spec:
   backend:
     serviceName: {{ $fullName }}
     servicePort: {{ $servicePort }}
 
+external-dns.alpha.kubernetes.io/hostname:
