@@ -33,7 +33,7 @@ spec:
       {{- end }}
       initContainers:
       - name: {{ .Chart.Name }}-init-app
-        image: "ubuntu"
+        image: "mainaero/gettext-alpine"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
           - name: {{ include "matomo.fullname" . }}-nfs
