@@ -11,13 +11,12 @@ service:
 
 resources: {}
 
-trustedHostsCheck: 0
+matomo: 
+  proxyUri: 'yes'
 
 db:
   port: '3306'
   host: '127.0.0.1'
-  tablesPrefix: 'matomo_'
-
 
 dbProxy:
   instances: "-instances=selfkey2:asia-east2:matomo=tcp:3306"

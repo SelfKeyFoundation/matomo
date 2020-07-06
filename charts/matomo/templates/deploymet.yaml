@@ -20,56 +20,12 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       volumes:
-      - name: {{ include "matomo.fullname" . }}-nfs
+      - name: my-pvc-nfs
         persistentVolumeClaim:
           claimName: {{ include "matomo.fullname" . }}-nfs
-      - name: config-volume
-        configMap:
-          # Provide the name of the ConfigMap containing the files you want
-          # to add to the container
-          name: {{ include "matomo.fullname" . }}
       {{- if .Values.dbServiceAccount }}
       serviceAccountName: {{ .Values.dbServiceAccount }}
       {{- end }}
-      initContainers:
-      - name: {{ .Chart.Name }}-init-app
-        image: "busybox:1.28"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        volumeMounts:
-          - name: {{ include "matomo.fullname" . }}-nfs
-            mountPath: /var/www/html
-          - name: config-volume
-            mountPath: /etc/config
-        env:
-        - name: MATOMO_DATABASE_USER
-          valueFrom:
-            secretKeyRef:
-              name: matomo-db
-              key: db_user
-        - name: MATOMO_DATABASE_PORT
-          value: !!string {{ .Values.db.port }}
-        - name: MATOMO_DATABASE_TABLES_PREFIX
-          value: !!string {{ .Values.db.tablesPrefix }}
-        - name: MATOMO_DATABASE_HOST
-          value: !!string {{ .Values.db.host }}
-        - name: MATOMO_DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: matomo-db
-              key: db_password
-        - name: MATOMO_DATABASE_DBNAME
-          valueFrom:
-            secretKeyRef:
-              name: matomo-db
-              key: db_name
-        - name: MATOMO_DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: matomo-db
-              key: matomo_user
-        - name: MATOMO_TRUSTED_HOST_CHECK
-          value: {{ .Values.trustedHostsCheck }}
-        command: ['sh', '-c', 'echo /etc/config/config.ini.php;']
       containers:
       - name: {{ .Chart.Name }}-app
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -88,16 +44,16 @@ spec:
               containerPort: 80
               protocol: TCP
         env:
+        - name: MATOMO_ENABLE_PROXY_URI_HEADER
+          value: !!string {{ .Values.matomo.proxyUri }}
         - name: MATOMO_DATABASE_USER
           valueFrom:
             secretKeyRef:
               name: matomo-db
               key: db_user
-        - name: MATOMO_DATABASE_PORT
+        - name: MARIADB_PORT_NUMBER
           value: !!string {{ .Values.db.port }}
-        - name: MATOMO_DATABASE_TABLES_PREFIX
-          value: !!string {{ .Values.db.tablesPrefix }}
-        - name: MATOMO_DATABASE_HOST
+        - name: MARIADB_HOST
           value: !!string {{ .Values.db.host }}
         - name: MATOMO_DATABASE_PASSWORD
           valueFrom:
@@ -114,8 +70,15 @@ spec:
             secretKeyRef:
               name: matomo-db
               key: matomo_user
-        - name: MATOMO_TRUSTED_HOST_CHECK
-          value: {{ .Values.trustedHostsCheck }}
+        - name: MATOMO_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: matomo-db
+              key: matomo_password
+        volumeMounts:
+          # name must match the volume name below
+          - name: my-pvc-nfs
+            mountPath: "/var/www/html"
       - name: cloud-sql-proxy
         # It is recommended to use the latest version of the Cloud SQL proxy
         # Make sure to update on a regular schedule!
