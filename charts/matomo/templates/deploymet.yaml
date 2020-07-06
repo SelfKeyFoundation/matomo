@@ -41,7 +41,7 @@ spec:
           - name: config-volume
             mountPath: /etc/config
         env:
-        - name: MATOMO_DATABASE_USER
+        - name: MATOMO_DATABASE_USERNAME
           valueFrom:
             secretKeyRef:
               name: matomo-db
@@ -62,7 +62,7 @@ spec:
             secretKeyRef:
               name: matomo-db
               key: db_name
-        - name: MATOMO_DATABASE_USERNAME
+        - name: MATOMO_USERNAME
           valueFrom:
             secretKeyRef:
               name: matomo-db
