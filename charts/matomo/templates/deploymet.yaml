@@ -33,7 +33,7 @@ spec:
       {{- end }}
       initContainers:
       - name: {{ .Chart.Name }}-init-app
-        image: "busybox:1.28"
+        image: "ubuntu"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
           - name: {{ include "matomo.fullname" . }}-nfs
