@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
     {{- if .Values.ingressDomain }}
-      ingressDomain: {{ .Values.ingressDomain }}
+      external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingressDomain }}
     {{- end }}
 spec:
   backend:
