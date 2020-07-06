@@ -68,7 +68,7 @@ spec:
               name: matomo-db
               key: matomo_user
         - name: MATOMO_TRUSTED_HOST_CHECK
-          value: {{ .Values.trustedHostsCheck }}
+          value: !!string {{ .Values.trustedHostsCheck }}
         command: ['sh', '-c', 'echo /etc/config/config.ini.php;']
       containers:
       - name: {{ .Chart.Name }}-app
