@@ -28,3 +28,5 @@ gcePersistentDisk:
   size: 20Gi
 
 dbServiceAccount: matomo-sql
+
+ingressDomain: false
