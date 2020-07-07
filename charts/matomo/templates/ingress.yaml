@@ -16,19 +16,19 @@ metadata:
 spec:
   {{- if .Values.tlsSecret }}
   tls: 
-  - hosts
-    - {{ .Values.ingressDomain }}
+  - hosts:
+      - {{ .Values.ingressDomain }}
     secretName: {{ .Values.tlsSecret }}
   {{- end }}
   
   {{- if .Values.ingressDomain }}
   rules:
-  - host: .Values.ingressDomain
+  - host: {{ .Values.ingressDomain }} 
     http:
       paths:
       - backend:
-        serviceName: {{ $fullName }}
-        servicePort: {{ $servicePort }}
+          serviceName: {{ $fullName }}
+          servicePort: {{ $servicePort }}
   {{- else }}
   backend:
     serviceName: {{ $fullName }}
