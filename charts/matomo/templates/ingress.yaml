@@ -11,11 +11,26 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
     {{- if .Values.ingressDomain }}
-      external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingressDomain }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingressDomain }}
     {{- end }}
 spec:
+  {{- if .Values.tlsSecret }}
+  tls: 
+  - hosts
+    - {{ .Values.ingressDomain }}
+    secretName: {{ .Values.tlsSecret }}
+  {{- end }}
+  
+  {{- if .Values.ingressDomain }}
+  rules:
+  - host: .Values.ingressDomain
+    http:
+      paths:
+      - backend:
+        serviceName: {{ $fullName }}
+        servicePort: {{ $servicePort }}
+  {{- else }}
   backend:
     serviceName: {{ $fullName }}
     servicePort: {{ $servicePort }}
-
-external-dns.alpha.kubernetes.io/hostname:
+  {{- end }}
