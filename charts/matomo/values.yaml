@@ -30,3 +30,5 @@ gcePersistentDisk:
 dbServiceAccount: matomo-sql
 
 ingressDomain: false
+
+tlsSecret: false
