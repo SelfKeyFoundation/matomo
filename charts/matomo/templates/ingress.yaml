@@ -13,6 +13,9 @@ metadata:
     {{- if .Values.ingressDomain }}
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingressDomain }}
     {{- end }}
+    {{- if .Values.ingressHttpDisable }}
+    kubernetes.io/ingress.allow-http: "false"
+    {{- end }}
 spec:
   {{- if .Values.tlsSecret }}
   tls: 
