@@ -28,10 +28,7 @@ spec:
               - name: {{ include "matomo.fullname" . }}-nfs
                 mountPath: /var/www/html
             command:
-              - su
-              - www-data
-              - s
-              - /bin/sh
+              - /bin/bash
               - -c
               - "/usr/local/bin/php /var/www/html/console core:archive --url={{ .Values.websiteUrl }}"
           - name: cloud-sql-proxy
