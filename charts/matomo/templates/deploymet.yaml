@@ -77,7 +77,7 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         resources:
-          {{ toYaml .Values.resources | indent 10 }}
+{{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
           - name: {{ include "matomo.fullname" . }}-nfs
             mountPath: /var/www/html
