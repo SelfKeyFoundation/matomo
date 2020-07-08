@@ -29,7 +29,7 @@ spec:
             volumeMounts:
               - name: {{ include "matomo.fullname" . }}-nfs
                 mountPath: /var/www/html
-            command: ["/bin/sh", "-c"]
+            command: ["/bin/bash", "-c"]
             args:
               - |
                 trap "touch /tmp/pod/main-terminated" EXIT
@@ -38,7 +38,7 @@ spec:
             # It is recommended to use the latest version of the Cloud SQL proxy
             # Make sure to update on a regular schedule!
             image: gcr.io/cloudsql-docker/gce-proxy:1.17
-            command: ["/bin/sh", "-c"]
+            command: ["/bin/bash", "-c"]
             args:
               - |
                 /cloud_sql_proxy
