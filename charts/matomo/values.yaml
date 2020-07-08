@@ -33,3 +33,4 @@ ingressDomain: false
 ingressHttpDisable: false
 tlsSecret: false
 assumeSecureProtocol: 1
+websiteUrl: ""
