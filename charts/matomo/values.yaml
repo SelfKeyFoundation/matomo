@@ -32,3 +32,4 @@ dbServiceAccount: matomo-sql
 ingressDomain: false
 ingressHttpDisable: false
 tlsSecret: false
+assumeSecureProtocol: 1

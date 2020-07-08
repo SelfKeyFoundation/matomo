@@ -69,6 +69,8 @@ spec:
               key: matomo_user
         - name: MATOMO_TRUSTED_HOST_CHECK
           value: !!string {{ .Values.trustedHostsCheck }}
+        - name: MATOMO_ASSUME_SECURE_PROTOCOL
+          value: !!string {{ .Values.assumeSecureProtocol }}
         command: ['sh', '-c', 'if [ ! -f /var/www/html/config/config.ini.php ]; then envsubst < /etc/config/config.ini.php > /var/www/html/config/config.ini.php; fi']
       containers:
       - name: {{ .Chart.Name }}-app
