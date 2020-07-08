@@ -23,6 +23,7 @@ data:
     proxy_client_headers[] = "HTTP_X_FORWARDED_FOR"
     salt = "462d13a3a89604eecaf1b9ed60a71181"
     enable_trusted_host_check = ${MATOMO_TRUSTED_HOST_CHECK}
+    assume_secure_protocol = ${MATOMO_ASSUME_SECURE_PROTOCOL}
 
     [PluginsInstalled]
     PluginsInstalled[] = "Diagnostics"
