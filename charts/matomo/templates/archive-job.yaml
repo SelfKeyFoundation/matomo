@@ -1,60 +1,60 @@
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: {{ include "matomo.fullname" . }}
-  labels:
-    app.kubernetes.io/name: {{ include "matomo.name" . }}
-    helm.sh/chart: {{ include "matomo.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-spec:
-  schedule: "0 */1 * * *"
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          volumes:
-          - name: {{ include "matomo.fullname" . }}-nfs
-            persistentVolumeClaim:
-              claimName: {{ include "matomo.fullname" . }}-nfs
-          - name: tmp-pod
-            emptyDir: {}
-          {{- if .Values.dbServiceAccount }}
-          serviceAccountName: {{ .Values.dbServiceAccount }}
-          {{- end }}
-          containers:
-          - name: {{ .Chart.Name }}-app
-            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-            imagePullPolicy: {{ .Values.image.pullPolicy }}
-            volumeMounts:
-              - name: {{ include "matomo.fullname" . }}-nfs
-                mountPath: /var/www/html
-            command: ["/bin/bash", "-c"]
-            args:
-              - |
-                trap "touch /tmp/pod/main-terminated" EXIT
-                /usr/local/bin/php /var/www/html/console core:archive --url={{ .Values.websiteUrl }}
-          - name: cloud-sql-proxy
-            # It is recommended to use the latest version of the Cloud SQL proxy
-            # Make sure to update on a regular schedule!
-            image: gcr.io/cloudsql-docker/gce-proxy:1.15
-            command: ["/bin/sh", "-c"]
-            args:
-              - |
-                /cloud_sql_proxy
-                {{ .Values.dbProxy.instances}} &
-                CHILD_PID=$!
-                (while true; do if [[ -f "/tmp/pod/main-terminated" ]]; then kill $CHILD_PID; echo "Killed $CHILD_PID as the main container terminated."; fi; sleep 1; done) &
-                wait $CHILD_PID
-                if [[ -f "/tmp/pod/main-terminated" ]]; then exit 0; echo "Job completed. Exiting..."; fi
-            securityContext:
-              # The default Cloud SQL proxy image is based on distroless, which
-              # runs as the "nonroot" user (uid: 65534) by default.
-              runAsNonRoot: true
-              runAsUser: 65532
-              runAsGroup: 65532
-            volumeMounts:
-              - mountPath: /tmp/pod
-                name: tmp-pod
-                readOnly: true
-          restartPolicy: Never
+# apiVersion: batch/v1beta1
+# kind: CronJob
+# metadata:
+#   name: {{ include "matomo.fullname" . }}
+#   labels:
+#     app.kubernetes.io/name: {{ include "matomo.name" . }}
+#     helm.sh/chart: {{ include "matomo.chart" . }}
+#     app.kubernetes.io/instance: {{ .Release.Name }}
+#     app.kubernetes.io/managed-by: {{ .Release.Service }}
+# spec:
+#   schedule: "0 */1 * * *"
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           volumes:
+#           - name: {{ include "matomo.fullname" . }}-nfs
+#             persistentVolumeClaim:
+#               claimName: {{ include "matomo.fullname" . }}-nfs
+#           - name: tmp-pod
+#             emptyDir: {}
+#           {{- if .Values.dbServiceAccount }}
+#           serviceAccountName: {{ .Values.dbServiceAccount }}
+#           {{- end }}
+#           containers:
+#           - name: {{ .Chart.Name }}-app
+#             image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+#             imagePullPolicy: {{ .Values.image.pullPolicy }}
+#             volumeMounts:
+#               - name: {{ include "matomo.fullname" . }}-nfs
+#                 mountPath: /var/www/html
+#             command: ["/bin/bash", "-c"]
+#             args:
+#               - |
+#                 trap "touch /tmp/pod/main-terminated" EXIT
+#                 /usr/local/bin/php /var/www/html/console core:archive --url={{ .Values.websiteUrl }}
+#           - name: cloud-sql-proxy
+#             # It is recommended to use the latest version of the Cloud SQL proxy
+#             # Make sure to update on a regular schedule!
+#             image: gcr.io/cloudsql-docker/gce-proxy:1.15
+#             command: ["/bin/sh", "-c"]
+#             args:
+#               - |
+#                 /cloud_sql_proxy
+#                 {{ .Values.dbProxy.instances}} &
+#                 CHILD_PID=$!
+#                 (while true; do if [[ -f "/tmp/pod/main-terminated" ]]; then kill $CHILD_PID; echo "Killed $CHILD_PID as the main container terminated."; fi; sleep 1; done) &
+#                 wait $CHILD_PID
+#                 if [[ -f "/tmp/pod/main-terminated" ]]; then exit 0; echo "Job completed. Exiting..."; fi
+#             securityContext:
+#               # The default Cloud SQL proxy image is based on distroless, which
+#               # runs as the "nonroot" user (uid: 65534) by default.
+#               runAsNonRoot: true
+#               runAsUser: 65532
+#               runAsGroup: 65532
+#             volumeMounts:
+#               - mountPath: /tmp/pod
+#                 name: tmp-pod
+#                 readOnly: true
+#           restartPolicy: Never
