@@ -71,7 +71,7 @@ spec:
           value: !!string {{ .Values.trustedHostsCheck }}
         - name: MATOMO_ASSUME_SECURE_PROTOCOL
           value: !!string {{ .Values.assumeSecureProtocol }}
-        command: ['sh', '-c', 'if [ ! -f /var/www/html/config/config.ini.php ]; then envsubst < /etc/config/config.ini.php > /var/www/html/config/config.ini.php; fi']
+        command: ['sh', '-c', 'if [ ! -f /var/www/html/config/config.ini.php ]; then envsubst < /etc/config/config.ini.php > /var/www/html/config/config.ini.php; fi; chown www-data:www-data /var/www/html/config/config.ini.php;']
       containers:
       - name: {{ .Chart.Name }}-app
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
