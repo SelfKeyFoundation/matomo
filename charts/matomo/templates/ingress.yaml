@@ -17,23 +17,13 @@ metadata:
     kubernetes.io/ingress.allow-http: "false"
     {{- end }}
 spec:
-  {{- if .Values.tlsSecret }}
+  {{- if and .Values.tlsSecret .Values.ingressDomain }}
   tls: 
   - hosts:
       - {{ .Values.ingressDomain }}
     secretName: {{ .Values.tlsSecret }}
   {{- end }}
   
-  {{- if .Values.ingressDomain }}
-  rules:
-  - host: {{ .Values.ingressDomain }} 
-    http:
-      paths:
-      - backend:
-          serviceName: {{ $fullName }}
-          servicePort: {{ $servicePort }}
-  {{- else }}
   backend:
     serviceName: {{ $fullName }}
     servicePort: {{ $servicePort }}
-  {{- end }}
