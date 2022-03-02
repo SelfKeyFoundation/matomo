@@ -2,7 +2,7 @@ replicaCount: 1
 
 image: 
   repository: matomo
-  tag: '3.13.6'
+  tag: '4.7.1'
   imagePullPolicy: IfNotPresent
 
 service:
